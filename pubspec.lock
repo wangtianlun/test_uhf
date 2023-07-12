@@ -176,14 +176,6 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.5.1"
-  uhf_c72_plugin:
-    dependency: "direct main"
-    description:
-      name: uhf_c72_plugin
-      sha256: "8397f8a2c316364acaaa02d8458b71ac88a7d2932b88e3756a0361dd3f21394c"
-      url: "https://pub.flutter-io.cn"
-    source: hosted
-    version: "1.0.1"
   vector_math:
     dependency: transitive
     description:
@@ -194,4 +186,3 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=3.0.5 <4.0.0"
-  flutter: ">=3.0.0"

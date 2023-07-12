@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:uhf_c72_plugin/uhf_c72_plugin.dart';
-import 'package:uhf_c72_plugin/tag_epc.dart';
 
 void main() {
   runApp(const MyApp());
@@ -60,33 +58,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   static const platform = MethodChannel('aaa');
-  bool _isConnected = false;
   String _batteryLevel = "Unknown battery level";
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  Future<void> initPlatformState() async {
-    String? platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await UhfC72Plugin.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    print('platformVersion: $platformVersion');
-
-    await UhfC72Plugin.connect;
-    await UhfC72Plugin.setWorkArea('2');
-    await UhfC72Plugin.setPowerLevel('30');
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
   }
 
   Future<void> _getBatteryLevel() async {
