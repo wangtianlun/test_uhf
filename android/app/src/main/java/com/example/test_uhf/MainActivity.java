@@ -18,11 +18,15 @@ import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 
+import com.handheld.uhfr.UHFRManager;
+import com.uhf.api.cls.Reader;
 
 public class MainActivity extends FlutterActivity {
  
     private static final String CHANNEL = "aaa";
  
+    public UHFRManager manager = UHFRManager.getInstance();
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
