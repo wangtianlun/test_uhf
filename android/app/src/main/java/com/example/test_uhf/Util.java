@@ -1,4 +1,4 @@
-package com.hdhe.scantest;
+package com.example.test_uhf;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,8 +8,6 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 
 public class Util {
-
-	
 	public static SoundPool sp ;
 	public static Map<Integer, Integer> suondMap;
 	public static Context context;

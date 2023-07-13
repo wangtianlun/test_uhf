@@ -1,4 +1,4 @@
-package com.hdhe.scantest;
+package com.example.test_uhf;
 
 /**
  * Created by Administrator on 2018/4/2.

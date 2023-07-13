@@ -107,6 +107,45 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  Future<void> _startScan() async {
+    try {
+      await platform.invokeMethod('startScan');
+      setState(() {
+        _result = 'start scan success';
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        _result = "Failed to start scan: '${e.message}'.";
+      });
+    }
+  }
+
+  Future<void> _stopScan() async {
+    try {
+      await platform.invokeMethod('stopScan');
+      setState(() {
+        _result = 'stop scan success';
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        _result = "Failed to stop scan: '${e.message}'.";
+      });
+    }
+  }
+
+  Future<void> _getBarCode() async {
+    try {
+      String code = await platform.invokeMethod('getBarCode');
+      setState(() {
+        _result = code;
+      });
+    } on PlatformException catch (e) {
+      setState(() {
+        _result = "Failed to get bar code: '${e.message}'.";
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -137,6 +176,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _close,
               child: const Text('close'),
+            ),
+            ElevatedButton(
+              onPressed: _startScan,
+              child: const Text('start scan'),
+            ),
+            ElevatedButton(
+              onPressed: _stopScan,
+              child: const Text('stop scan'),
+            ),
+            ElevatedButton(
+              onPressed: _getBarCode,
+              child: const Text('get barcode'),
             ),
             Text(_result),
           ],

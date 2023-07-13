@@ -1,4 +1,4 @@
-package com.hdhe.scantest;
+package com.example.test_uhf;
 
 import android.content.Context;
 import android.content.Intent;

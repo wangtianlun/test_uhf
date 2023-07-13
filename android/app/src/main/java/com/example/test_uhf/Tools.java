@@ -1,4 +1,4 @@
-package com.hdhe.scantest;
+package com.example.test_uhf;
 
 
 public class Tools {
