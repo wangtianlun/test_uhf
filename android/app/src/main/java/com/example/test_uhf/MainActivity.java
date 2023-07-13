@@ -6,23 +6,17 @@ import android.content.IntentFilter;
 import android.os.BatteryManager;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
-import android.os.Bundle;
- 
+
 import androidx.annotation.NonNull;
  
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 
-import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
-import io.flutter.plugin.common.MethodChannel.Result;
 
 import com.handheld.uhfr.UHFRManager;
 import com.uhf.api.cls.Reader;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import cn.pda.serialport.Tools;
 
 public class MainActivity extends FlutterActivity {

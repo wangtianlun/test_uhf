@@ -25,11 +25,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
-def keystoreProperties = new Properties()
-def keystorePropertiesFile = rootProject.file('key.properties')
-if (keystorePropertiesFile.exists()) {
-  keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-}
+//def keystoreProperties = new Properties()
+//def keystorePropertiesFile = rootProject.file('key.properties')
+//if (keystorePropertiesFile.exists()) {
+//  keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+//}
 
 android {
     namespace "com.example.test_uhf"
@@ -39,15 +39,6 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
-
-    sourceSets {
-        main.java.srcDirs += 'src/main/java'
-        main.jniLibs.srcDirs = ['src/main/jniLibs']
     }
 
     defaultConfig {
@@ -64,10 +55,10 @@ android {
 
     signingConfigs {
         release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
-            storePassword keystoreProperties['storePassword']
+            keyAlias "picture"
+            keyPassword "luck888A"
+            storeFile file("./picture.jks")
+            storePassword "luck888A"
         }
     }
     buildTypes {
@@ -82,8 +73,10 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation fileTree(dir: 'src/main/jniLibs', include: ['arm64-v8a/*.so', 'armeabi/*.so', 'armeabi-v7a/*.so'])
-
+    implementation files('libs\\reader(1).jar')
+    implementation files('libs\\ModuleAPI_J.jar')
+    implementation files('libs\\UHF67_v1.0.3.jar')
+    implementation files('libs\\App_Demo_API.jar')
+    implementation files('libs\\DeviceAPIver20150204.jar')
+    implementation files('libs\\logutil-1.5.1.1.jar')
 }
