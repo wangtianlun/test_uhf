@@ -20,6 +20,10 @@ import io.flutter.plugin.common.MethodChannel.Result;
 
 import com.handheld.uhfr.UHFRManager;
 import com.uhf.api.cls.Reader;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import cn.pda.serialport.Tools;
 
 public class MainActivity extends FlutterActivity {
  
@@ -42,6 +46,21 @@ public class MainActivity extends FlutterActivity {
                             } else {
                               result.error("UNAVAILABLE", "Battery level not available.", null);
                             }
+                          } else if (call.method.equals("getSyncRFID")) {
+                            String rfid = getSyncRFID();
+                            result.success(rfid);
+                          } else if (call.method.equals("getPower")) {
+                            String power = getPower();
+                            result.success(power);
+                          } else if (call.method.equals("setPower")) {
+                            Boolean isSuccess = setPower(30, 30);
+                            result.success(isSuccess);
+                          } else if (call.method.equals("getHardware")) {
+                            String hardware = getHardware();
+                            result.success(hardware);
+                          } else if (call.method.equals("close")) {
+                            Boolean isCloseSuccess = close();
+                            result.success(isCloseSuccess);
                           } else {
                             result.notImplemented();
                           }
@@ -63,4 +82,67 @@ public class MainActivity extends FlutterActivity {
     return batteryLevel;
   }
 
+  public String getHardware() {
+    try {
+      String data = manager.getHardware();
+      return data;
+    } catch(Exception e) {
+      return "";
+    }
+  }
+
+  /**
+   * 设置设备读写功率
+   * @param readPower 5~30
+   * @param writePower 5~30
+   * @return
+   */
+  public Boolean setPower(int readPower, int writePower){
+    try {
+      Reader.READER_ERR err = manager.setPower(readPower,writePower);
+      return err == Reader.READER_ERR.MT_OK_ERR;
+    } catch(Exception e) {
+      return false;
+    }
+  }
+
+  public String getSyncRFID() {
+    String data = "";
+    try {
+      manager.asyncStartReading();
+      Thread.sleep(300);
+      List<Reader.TAGINFO> list = manager.tagInventoryRealTime();
+      if (list.size() > 0) {
+        for (Reader.TAGINFO tfs : list) {
+            byte[] epcdata = tfs.EpcId;
+            data = Tools.Bytes2HexString(epcdata, epcdata.length);
+        }
+      }
+      manager.asyncStopReading();
+      return data;
+    } catch(Exception e) {
+      return data;
+    }
+  }
+
+  public String getPower() {
+    try {
+      int [] result = manager.getPower();
+      if(result != null){
+        return "读功率："+result[0]+" 写功率："+result[1];
+      }
+      return "获取失败";
+    } catch(Exception e) {
+      return "get power 调用失败";
+    }
+  }
+
+  public Boolean close() {
+    try {
+      Boolean isSuccess = manager.close();
+      return isSuccess;
+    } catch(Exception e) {
+      return false;
+    }
+  }
 }
