@@ -37,7 +37,7 @@ public class MainActivity extends FlutterActivity {
 
     private String barcode;
 
-    public UHFRManager manager = UHFRManager.getInstance();
+    public UHFRManager manager;
 
     private SharedPreferences mSharedPreferences;
 
@@ -118,8 +118,9 @@ public class MainActivity extends FlutterActivity {
   }
 
   @Override
-  public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
+  protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState, persistentState);
+    manager = UHFRManager.getInstance();
     mSharedPreferences = this.getSharedPreferences("UHF", MODE_PRIVATE);
     initModule();
     setScanKeyDisable();

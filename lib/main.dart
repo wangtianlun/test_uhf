@@ -122,12 +122,9 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _startScan() async {
     try {
       await platform.invokeMethod('startScan');
-      setState(() {
-        _result = 'start scan success';
-      });
     } on PlatformException catch (e) {
       setState(() {
-        _result = "Failed to start scan: '${e.message}'.";
+        _ticketId = "Failed to start scan: '${e.message}'.";
       });
     }
   }
@@ -147,10 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _getBarCode() async {
     try {
-      String code = await platform.invokeMethod('getBarCode');
-      setState(() {
-        _ticketId = code;
-      });
+      await platform.invokeMethod('getBarCode');
     } on PlatformException catch (e) {
       setState(() {
         _ticketId = "Failed to get bar code: '${e.message}'.";
@@ -186,7 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         padding: EdgeInsets.only(top: 40, bottom: 20),
                         child: Text(_ticketId),
                       ),
-                      ElevatedButton(onPressed: _getBarCode, child: Text('get'))
+                      ElevatedButton(onPressed: _startScan, child: Text('scan'))
                     ],
                   ),
                 ),
