@@ -33,8 +33,6 @@ public class MainActivity extends FlutterActivity {
  
     private static final String CHANNEL = "aaa";
 
-    private static final String CHANNEL2 = "bbb";
-
     private String batteryValue;
 
     private String barcode;
