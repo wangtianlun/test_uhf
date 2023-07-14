@@ -255,7 +255,7 @@ public class MainActivity extends FlutterActivity {
     String data = "";
     try {
       manager.asyncStartReading();
-      Thread.sleep(300);
+      // Thread.sleep(300);
       List<Reader.TAGINFO> list = manager.tagInventoryRealTime();
       if (list.size() > 0) {
         for (Reader.TAGINFO tfs : list) {
