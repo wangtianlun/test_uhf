@@ -3,98 +3,234 @@ package com.example.test_uhf;
 import android.content.Context;
 import android.content.Intent;
 
-/**
- * @author Administrator
- * @date 2018/4/19
- */
+import java.lang.ref.WeakReference;
 
+/**
+ * description : ScanUtils for ScanService, to set ScanService
+ * update : 2019/10/24 18:35,LeiHuang,Init commit
+ *
+ * @author : LeiHuang
+ * @version : 1.0
+ */
 public class ScanUtil {
 
-    /**
-     * Open scan service
-     */
     private final String ACTION_SCAN_INIT = "com.rfid.SCAN_INIT";
-    /**
-     * Scanning
-     */
-    private final String ACTION_SCAN = "com.rfid.SCAN_CMD";
-    /**
-     * Stop Scanning
-     */
-    private static final String ACTION_STOP_SCAN = "com.rfid.STOP_SCAN";
-    /**
-     * Close scan service
-     */
-    private final String ACTION_CLOSE_SCAN = "com.rfid.CLOSE_SCAN";
-    /**
-     * Scan result output mode, 0 -- BroadcastReceiver mode; 1 -- Focus input mode (default)
-     */
+
     private final String ACTION_SET_SCAN_MODE = "com.rfid.SET_SCAN_MODE";
-    /**
-     * Scan timeout (Value:1000,2000,3000,4000,5000,6000,7000,8000,9000,10000)
-     */
+
+    private final String ACTION_SCAN = "com.rfid.SCAN_CMD";
+
+    private final String ACTION_STOP_SCAN = "com.rfid.STOP_SCAN";
+
+    private final String ACTION_CLOSE_SCAN = "com.rfid.CLOSE_SCAN";
+
     private final String ACTION_SCAN_TIME = "com.rfid.SCAN_TIME";
 
-    private Context context;
+    private final String ACTION_SCAN_VOICE = "com.rfid.SCAN_VOICE";
 
-    /**
-     * Initialize ScanUtil and open scan service
-     * @param context Context
-     */
-    ScanUtil(Context context) {
-        this.context = context;
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SCAN_INIT);
-        context.sendBroadcast(intent);
+    private final String ACTION_SCAN_VIBERATE = "com.rfid.SCAN_VIBERATE";
+
+    private final String ACTION_SCAN_CONTINUOUS = "com.rfid.SCAN_CONTINUOUS";
+
+    private final String ACTION_SCAN_INTERVAL = "com.rfid.SCAN_INTERVAL";
+
+    private final String ACTION_SCAN_FILTER_BLANK = "com.rfid.SCAN_FILTER_BLANK";
+
+    private final String ACTION_SCAN_FILTER_INVISIBLE_CHARS = "com.rfid.SCAN_FILTER_INVISIBLE_CHARS";
+
+    private final String ACTION_SCAN_PREFIX = "com.rfid.SCAN_PREFIX";
+
+    private final String ACTION_SCAN_SUFFIX = "com.rfid.SCAN_SUFFIX";
+
+    private final String ACTION_SCAN_END_CHAR = "com.rfid.SCAN_END_CHAR";
+
+    private final String ACTION_KEY_SET = "com.rfid.KEY_SET";
+
+    private static WeakReference<Context> sWeakReference;
+
+    private ScanUtil() {
+    }
+
+    public static ScanUtil getInstance(Context context) {
+        sWeakReference = new WeakReference<>(context);
+        return ScanUtilHolder.sScanUtils;
+    }
+
+    private static class ScanUtilHolder {
+        private static ScanUtil sScanUtils = new ScanUtil();
     }
 
     /**
-     * Start Scanning
+     * Enable scanner
      */
-    public void scan() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SCAN);
-        context.sendBroadcast(intent);
+    public void initReader() {
+        Intent intent = new Intent(ACTION_SCAN_INIT);
+        sWeakReference.get().sendBroadcast(intent);
     }
 
     /**
-     * Stop Scanning
+     * Set the mode to send barcodes or QR codes
+     *
+     * @param barcodeSendMode send mode; 0(Broadcast), 1(Focus), 2(EmuKey), 3(Clipboard); The default value is 1
+     */
+    public void setBarcodeSendMode(int barcodeSendMode) {
+        Intent intent = new Intent(ACTION_SET_SCAN_MODE);
+        intent.putExtra("mode", barcodeSendMode);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * If it is not scanning, start scanning.
+     */
+    public void startScan() {
+        Intent intent = new Intent(ACTION_SCAN);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Stop scanning if it is scanning
      */
     public void stopScan() {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_STOP_SCAN);
-        context.sendBroadcast(intent);
+        Intent intent = new Intent(ACTION_STOP_SCAN);
+        sWeakReference.get().sendBroadcast(intent);
     }
 
     /**
-     * Set the scan result output mode
-     * @param mode 0 -- BroadcastReceiver mode; 1 -- Focus input mode (default)
+     * Disable scanner
      */
-    public void setScanMode(int mode) {
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SET_SCAN_MODE);
-        intent.putExtra("mode", mode);
-        context.sendBroadcast(intent);
-    }
-
-    /**
-     * Close scan service
-     */
-    public void close() {
-        Intent toKillService = new Intent();
-//        toKillService.putExtra("iscamera", true);
-        toKillService.setAction(ACTION_CLOSE_SCAN);
-        context.sendBroadcast(toKillService);
+    public void uninitReader() {
+        Intent intent = new Intent(ACTION_CLOSE_SCAN);
+        sWeakReference.get().sendBroadcast(intent);
     }
 
     /**
      * Set scan timeout
-     * @param timeout Value:1000,2000,3000,4000,5000(default),6000,7000,8000,9000,10000
+     *
+     * @param timeout 500 - 10000; The default value is 10000, and the unit is milliseconds
      */
-    public void setTimeout(String timeout){
-        Intent intent = new Intent();
-        intent.setAction(ACTION_SCAN_TIME);
+    public void setDecodeTimeout(String timeout) {
+        Intent intent = new Intent(ACTION_SCAN_TIME);
         intent.putExtra("time", timeout);
-        context.sendBroadcast(intent);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Enable or disable scan sounds
+     *
+     * @param voiceEnable true -- enable, false -- disable; The default value is true
+     */
+    public void setScanVoice(boolean voiceEnable) {
+        Intent intent = new Intent(ACTION_SCAN_VOICE);
+        intent.putExtra("sound_play", voiceEnable);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Enable or disable scanning vibration
+     *
+     * @param viberatEnable true -- enable, false -disable; The default value is false
+     */
+    public void setScanViberate(boolean viberatEnable) {
+        Intent intent = new Intent(ACTION_SCAN_VIBERATE);
+        intent.putExtra("viberate", viberatEnable);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Enable or disable continuous scan mode
+     *
+     * @param continu true -- enable, false -disable; The default value is false
+     */
+    public void setScanContinu(boolean continu) {
+        Intent intent = new Intent(ACTION_SCAN_CONTINUOUS);
+        intent.putExtra("ContinuousMode", continu);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Set the continuous scan interval
+     *
+     * @param interval 0 - 60000; The default value is 1000, and the unit is milliseconds
+     */
+    public void setScanContinuInterval(String interval) {
+        Intent intent = new Intent(ACTION_SCAN_INTERVAL);
+        intent.putExtra("ContinuousInternal", interval);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Set whether to filter the space before and after the scan result
+     * @param isFilterBlank true -- filter, false -- do not filter; The default value is false
+     */
+    public void setScanFilterBlank(boolean isFilterBlank){
+        Intent intent = new Intent(ACTION_SCAN_FILTER_BLANK);
+        intent.putExtra("filter_prefix_suffix_blank", isFilterBlank);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Set whether to filter invisible characters in scan results
+     * @param isFilterInvisible true -- filter, false -- do not filter; The default value is false
+     */
+    public void setScanFilterInvisibleChars(boolean isFilterInvisible){
+        Intent intent = new Intent(ACTION_SCAN_FILTER_INVISIBLE_CHARS);
+        intent.putExtra("filter_invisible_chars", isFilterInvisible);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Barcode and QR code prefix setting
+     * @param prefix String type, defaults to ""
+     */
+    public void setScanPrefix(String prefix){
+        Intent intent = new Intent(ACTION_SCAN_PREFIX);
+        intent.putExtra("prefix", prefix);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Barcode and QR code suffix setting
+     * @param suffix String type, defaults to ""
+     */
+    public void setScanSuffix(String suffix){
+        Intent intent = new Intent(ACTION_SCAN_SUFFIX);
+        intent.putExtra("suffix", suffix);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Barcode and QR code append end char settings
+     * @param endChar String type, defaults to "NONE", the value can be "ENTER","TAB","SPACE","NONE"
+     */
+    public void setScanEndChar(String endChar){
+        Intent intent = new Intent(ACTION_SCAN_END_CHAR);
+        intent.putExtra("endchar", endChar);
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Enable scan key
+     * @param keyValues key code
+     */
+    public void enableScanKey(String... keyValues){
+        Intent intent = new Intent(ACTION_KEY_SET);
+        intent.putExtra("keyValueArray", keyValues);
+        for (String value : keyValues){
+            intent.putExtra(value, true);
+        }
+        sWeakReference.get().sendBroadcast(intent);
+    }
+
+    /**
+     * Disable scan key
+     * @param keyValues keycode
+     */
+    public void disableScanKey(String... keyValues){
+        Intent intent = new Intent(ACTION_KEY_SET);
+        intent.putExtra("keyValueArray", keyValues);
+        for (String value : keyValues){
+            intent.putExtra(value, false);
+        }
+        sWeakReference.get().sendBroadcast(intent);
     }
 }

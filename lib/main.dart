@@ -38,6 +38,16 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    platform.setMethodCallHandler(_handleMethodCall);
+  }
+
+  Future<dynamic> _handleMethodCall(MethodCall call) async {
+    if (call.method == 'getBarCode') {
+      dynamic message = call.arguments;
+      setState(() {
+        _result = message;
+      });
+    }
   }
 
   Future<void> _getSyncRFID() async {

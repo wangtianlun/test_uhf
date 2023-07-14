@@ -4,13 +4,14 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.BatteryManager;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
-
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -22,8 +23,8 @@ import io.flutter.plugin.common.MethodChannel;
 
 import com.handheld.uhfr.UHFRManager;
 import com.uhf.api.cls.Reader;
+
 import java.util.List;
-import cn.pda.serialport.Tools;
 
 import android.content.BroadcastReceiver;
 
@@ -32,13 +33,21 @@ public class MainActivity extends FlutterActivity {
  
     private static final String CHANNEL = "aaa";
 
+    private static final String CHANNEL2 = "bbb";
+
     private String batteryValue;
 
     private String barcode;
 
-    public UHFRManager manager = UHFRManager.getInstance();
+    public UHFRManager manager;
+
+    private SharedPreferences mSharedPreferences;
 
     private ScanUtil scanUtil;
+
+    private BarCodeScanUtil barCodeScanUtil;
+
+    private MethodChannel methodChannel;
 
   private BroadcastReceiver receiver = new BroadcastReceiver() {
       @Override
@@ -47,6 +56,7 @@ public class MainActivity extends FlutterActivity {
         if (data != null) {
           String code = new String(data);
           barcode = code;
+          methodChannel.invokeMethod("getBarCode", code);
         }
       }
     };
@@ -54,8 +64,8 @@ public class MainActivity extends FlutterActivity {
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
-        new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(),CHANNEL)
-                .setMethodCallHandler(
+        methodChannel = new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(),CHANNEL);
+                methodChannel.setMethodCallHandler(
                         (call,result) -> {
                           // This method is invoked on the main thread.
                           if (call.method.equals("getBatteryLevel")) {
@@ -94,9 +104,28 @@ public class MainActivity extends FlutterActivity {
                 );
     }
 
+  private void initModule() {
+    manager = UHFRManager.getInstance();// Init Uhf module
+    if (manager != null) {
+      SharedUtil sharedUtil = new SharedUtil(this);
+      Reader.READER_ERR err = manager.setPower(sharedUtil.getPower(), sharedUtil.getPower());
+      if(err== Reader.READER_ERR.MT_OK_ERR){
+        manager.setRegion(Reader.Region_Conf.valueOf(sharedUtil.getWorkFreq()));
+      } else {
+        Reader.READER_ERR err1 = manager.setPower(30, 30);//set uhf module power
+        if(err1== Reader.READER_ERR.MT_OK_ERR) {
+          manager.setRegion(Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1)));
+        }
+      }
+    }
+  }
+
   @Override
   public void onCreate(@Nullable Bundle savedInstanceState, @Nullable PersistableBundle persistentState) {
     super.onCreate(savedInstanceState, persistentState);
+    mSharedPreferences = this.getSharedPreferences("UHF", MODE_PRIVATE);
+    initModule();
+    setScanKeyDisable();
     IntentFilter filter = new IntentFilter();
     filter.addAction("com.rfid.SCAN");
     registerReceiver(receiver, filter);
@@ -107,23 +136,25 @@ public class MainActivity extends FlutterActivity {
     Util.initSoundPool(this);
   }
 
+
+
   @Override
   protected void onResume() {
     super.onResume();
-    if (scanUtil == null) {
-      scanUtil = new ScanUtil(this);
+    if (barCodeScanUtil == null) {
+      barCodeScanUtil = new BarCodeScanUtil(this);
       //we must set mode to 0 : BroadcastReceiver mode
-      scanUtil.setScanMode(0);
+      barCodeScanUtil.setScanMode(0);
     }
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    if (scanUtil != null) {
-      scanUtil.setScanMode(1);
-      scanUtil.close();
-      scanUtil = null;
+    if (barCodeScanUtil != null) {
+      barCodeScanUtil.setScanMode(1);
+      barCodeScanUtil.close();
+      barCodeScanUtil = null;
     }
   }
 
@@ -132,6 +163,51 @@ public class MainActivity extends FlutterActivity {
     super.onDestroy();
     unregisterReceiver(receiver);
     unregisterReceiver(batteryReceiver);
+  }
+
+  @Override
+  protected void onStop() {
+    super.onStop();
+    setScanKeyEnable();
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+    closeModule() ;
+  }
+
+  private void closeModule() {
+    if (manager != null) {//close uhf module
+      manager.close();
+      manager = null;
+    }
+  }
+
+  private void setScanKeyDisable() {
+    int currentApiVersion = Build.VERSION.SDK_INT;
+    if (currentApiVersion > Build.VERSION_CODES.N) {
+      // For Android10.0 module
+      scanUtil = ScanUtil.getInstance(this);
+      scanUtil.disableScanKey("134");
+      scanUtil.disableScanKey("137");
+    }
+  }
+
+
+  private void setScanKeyEnable() {
+    int currentApiVersion = Build.VERSION.SDK_INT;
+    if (currentApiVersion > Build.VERSION_CODES.N) {
+      // For Android10.0 module
+      scanUtil = ScanUtil.getInstance(this);
+      scanUtil.enableScanKey("134");
+      scanUtil.enableScanKey("137");
+    }
+    try {
+      Thread.sleep(500);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
   }
 
   private int getBatteryLevel() {
@@ -154,7 +230,8 @@ public class MainActivity extends FlutterActivity {
       String data = manager.getHardware();
       return data;
     } catch(Exception e) {
-      return "";
+      String msg = e.getMessage();
+      return msg;
     }
   }
 
@@ -214,14 +291,14 @@ public class MainActivity extends FlutterActivity {
   }
 
   public void startScan() {
-    if (scanUtil != null) {
-      scanUtil.scan();
+    if (barCodeScanUtil != null) {
+      barCodeScanUtil.scan();
     }
   }
 
   public void stopScan() {
-    if (scanUtil != null) {
-      scanUtil.stopScan();
+    if (barCodeScanUtil != null) {
+      barCodeScanUtil.stopScan();
     }
   }
 
