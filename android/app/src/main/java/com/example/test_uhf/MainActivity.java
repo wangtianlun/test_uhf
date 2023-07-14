@@ -39,7 +39,7 @@ public class MainActivity extends FlutterActivity {
 
     private String barcode;
 
-    public UHFRManager manager;
+    public UHFRManager manager = UHFRManager.getInstance();
 
     private SharedPreferences mSharedPreferences;
 
@@ -105,7 +105,6 @@ public class MainActivity extends FlutterActivity {
     }
 
   private void initModule() {
-    manager = UHFRManager.getInstance();// Init Uhf module
     if (manager != null) {
       SharedUtil sharedUtil = new SharedUtil(this);
       Reader.READER_ERR err = manager.setPower(sharedUtil.getPower(), sharedUtil.getPower());
