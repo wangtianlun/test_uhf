@@ -103,6 +103,7 @@ public class MainActivity extends FlutterActivity {
     }
 
   private void initModule() {
+      manager = UHFRManager.getInstance();
     if (manager != null) {
       SharedUtil sharedUtil = new SharedUtil(this);
       Reader.READER_ERR err = manager.setPower(sharedUtil.getPower(), sharedUtil.getPower());
@@ -118,12 +119,16 @@ public class MainActivity extends FlutterActivity {
   }
 
   @Override
-  protected void onCreate(@Nullable Bundle savedInstanceState) {
-    super.onCreate(savedInstanceState, persistentState);
-    manager = UHFRManager.getInstance();
-    mSharedPreferences = this.getSharedPreferences("UHF", MODE_PRIVATE);
+  protected void onStart() {
+    super.onStart();
     initModule();
     setScanKeyDisable();
+  }
+
+  @Override
+  protected void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    mSharedPreferences = this.getSharedPreferences("UHF", MODE_PRIVATE);
     IntentFilter filter = new IntentFilter();
     filter.addAction("com.rfid.SCAN");
     registerReceiver(receiver, filter);
@@ -133,8 +138,6 @@ public class MainActivity extends FlutterActivity {
     registerReceiver(batteryReceiver, batteryfilter);
     Util.initSoundPool(this);
   }
-
-
 
   @Override
   protected void onResume() {
