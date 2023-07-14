@@ -33,6 +33,8 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String _result = '';
+  String _ticketId = 'Ticket ID from reader';
+  String _wristbandId = 'Wristband ID from reader';
   static const platform = MethodChannel('aaa');
 
   @override
@@ -55,11 +57,11 @@ class _MyHomePageState extends State<MyHomePage> {
       String rfid = await platform.invokeMethod('getSyncRFID');
       print('rfid: $rfid');
       setState(() {
-        _result = rfid;
+        _wristbandId = rfid;
       });
     } on PlatformException catch (e) {
       setState(() {
-        _result = "Failed to get rfid: '${e.message}'.";
+        _wristbandId = "Failed to get rfid: '${e.message}'.";
       });
     }
   }
@@ -147,11 +149,11 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       String code = await platform.invokeMethod('getBarCode');
       setState(() {
-        _result = code;
+        _ticketId = code;
       });
     } on PlatformException catch (e) {
       setState(() {
-        _result = "Failed to get bar code: '${e.message}'.";
+        _ticketId = "Failed to get bar code: '${e.message}'.";
       });
     }
   }
@@ -159,49 +161,88 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            ElevatedButton(
-              onPressed: _getHardware,
-              child: const Text('get hardware'),
+      // appBar: AppBar(
+      //   backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+      //   title: Text(widget.title),
+      // ),
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.only(
+                    top: 80,
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        child: const Text(
+                          "Ticket",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(top: 40, bottom: 20),
+                        child: Text(_ticketId),
+                      ),
+                      ElevatedButton(onPressed: _getBarCode, child: Text('get'))
+                    ],
+                  ),
+                ),
+                Container(
+                  margin: EdgeInsets.only(
+                    top: 160,
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        child: const Text(
+                          "Wristband",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      Container(
+                        padding: EdgeInsets.only(
+                          top: 40,
+                          bottom: 20,
+                        ),
+                        child: Text(_wristbandId),
+                      ),
+                      ElevatedButton(
+                          onPressed: _getSyncRFID, child: Text('get'))
+                    ],
+                  ),
+                ),
+                Text(_result),
+              ],
             ),
-            ElevatedButton(
-              onPressed: _getSyncRFID,
-              child: const Text('get rfid'),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              onTap: () {
+                // Button click event
+                print('Button Clicked');
+              },
+              child: Container(
+                height: 80,
+                color: Colors.blue,
+                child: Center(
+                  child: Text(
+                    'Pair & Admit',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                    ),
+                  ),
+                ),
+              ),
             ),
-            ElevatedButton(
-              onPressed: _getPower,
-              child: const Text('get power'),
-            ),
-            ElevatedButton(
-              onPressed: _setPower,
-              child: const Text('set power'),
-            ),
-            ElevatedButton(
-              onPressed: _close,
-              child: const Text('close'),
-            ),
-            ElevatedButton(
-              onPressed: _startScan,
-              child: const Text('start scan'),
-            ),
-            ElevatedButton(
-              onPressed: _stopScan,
-              child: const Text('stop scan'),
-            ),
-            ElevatedButton(
-              onPressed: _getBarCode,
-              child: const Text('get barcode'),
-            ),
-            Text(_result),
-          ],
-        ),
+          ),
+        ],
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
