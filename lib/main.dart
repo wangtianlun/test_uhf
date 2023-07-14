@@ -47,7 +47,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (call.method == 'getBarCode') {
       dynamic message = call.arguments;
       setState(() {
-        _result = message;
+        _ticketId = message;
       });
     }
   }
