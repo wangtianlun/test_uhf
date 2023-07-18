@@ -15,13 +15,16 @@ public class MyApplication extends FlutterApplication  {
         });
         Thread.setDefaultUncaughtExceptionHandler(new MyUncaughtExceptionHandler());
     }
+
+    // 自定义异常处理程序类
+    private static class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+      @Override
+      public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
+        // 在这里执行异常处理逻辑，例如将异常发送到 Sentry
+        Sentry.captureException(throwable);
+      }
+    }
 }
 
-// 自定义异常处理程序类
-private static class MyUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-  @Override
-  public void uncaughtException(@NonNull Thread thread, @NonNull Throwable throwable) {
-    // 在这里执行异常处理逻辑，例如将异常发送到 Sentry
-    Sentry.captureException(throwable);
-  }
-}
+
+
