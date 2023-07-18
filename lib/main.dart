@@ -1,8 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
-void main() {
-  runApp(const MyApp());
+Future<void> main() async {
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = '';
+      // Set tracesSampleRate to 1.0 to capture 100% of transactions for performance monitoring.
+      // We recommend adjusting this value in production.
+      options.tracesSampleRate = 1.0;
+    },
+    appRunner: () => runApp(const MyApp()),
+  );
+
+  FlutterError.onError = (details) {
+    final dynamic exception = details.exception;
+    final dynamic stackTrace = details.stack;
+
+    // 发送异常到 Sentry
+    Sentry.captureException(
+      exception,
+      stackTrace: stackTrace,
+    );
+  };
+
+  // or define SENTRY_DSN via Dart environment variable (--dart-define)
 }
 
 class MyApp extends StatelessWidget {
@@ -121,7 +143,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> _startScan() async {
     try {
-      await platform.invokeMethod('startScan');
+      String msg = await platform.invokeMethod('startScan');
+      setState(() {
+        _ticketId = msg;
+      });
     } on PlatformException catch (e) {
       setState(() {
         _ticketId = "Failed to start scan: '${e.message}'.";

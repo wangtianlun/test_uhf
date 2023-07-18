@@ -73,6 +73,7 @@ flutter {
 }
 
 dependencies {
+    implementation 'io.sentry:sentry-android:5.0.0'
     implementation files('libs\\reader(1).jar')
     implementation files('libs\\ModuleAPI_J.jar')
     implementation files('libs\\UHF67_v1.0.3.jar')

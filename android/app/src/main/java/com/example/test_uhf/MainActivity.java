@@ -12,14 +12,17 @@ import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.PersistableBundle;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import io.sentry.Sentry;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 
 import io.flutter.plugin.common.MethodChannel;
+import io.sentry.android.core.SentryAndroid;
 
 import com.handheld.uhfr.UHFRManager;
 import com.uhf.api.cls.Reader;
@@ -47,6 +50,8 @@ public class MainActivity extends FlutterActivity {
 
     private MethodChannel methodChannel;
 
+    private KeyReceiver keyReceiver;
+
   private BroadcastReceiver receiver = new BroadcastReceiver() {
       @Override
       public void onReceive(Context context, Intent intent) {
@@ -58,6 +63,45 @@ public class MainActivity extends FlutterActivity {
         }
       }
     };
+
+    private void registerKeyCodeReceiver() {
+      keyReceiver = new KeyReceiver();
+      IntentFilter filter = new IntentFilter();
+      filter.addAction("android.rfid.FUN_KEY");
+      filter.addAction("android.intent.action.FUN_KEY");
+      registerReceiver(keyReceiver, filter);
+    }
+
+    private class KeyReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int keyCode = intent.getIntExtra("keyCode", 0);
+          Log.e("keycord", String.valueOf(keyCode));
+            if (keyCode == 0) {
+                keyCode = intent.getIntExtra("keycode", 0);
+            }
+            boolean keyDown = intent.getBooleanExtra("keydown", false);
+            if (keyDown) {
+//                ToastUtils.showText("KeyReceiver:keyCode = down" + keyCode);
+            } else {
+//                ToastUtils.showText("KeyReceiver:keyCode = up" + keyCode);
+                switch (keyCode) {
+                    case KeyEvent.KEYCODE_F1:
+                        break;
+                    case KeyEvent.KEYCODE_F2:
+                        break;
+                    case KeyEvent.KEYCODE_F5:
+                        break;
+                    case KeyEvent.KEYCODE_F3://C510x
+                    case KeyEvent.KEYCODE_F4://6100
+                    case KeyEvent.KEYCODE_F7://H3100
+                        // invenroty();
+                        break;
+                }
+            }
+        }
+
+    } 
 
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
@@ -92,7 +136,8 @@ public class MainActivity extends FlutterActivity {
                           } else if (call.method.equals("getBarCode")) {
                             result.success(barcode);
                           } else if (call.method.equals("startScan")) {
-                            startScan();
+                            String scanMessage = startScan();
+                            result.success(scanMessage);
                           } else if (call.method.equals("stopScan")) {
                             stopScan();
                           } else {
@@ -103,26 +148,34 @@ public class MainActivity extends FlutterActivity {
     }
 
   private void initModule() {
+    try {
       manager = UHFRManager.getInstance();
-    if (manager != null) {
-      SharedUtil sharedUtil = new SharedUtil(this);
-      Reader.READER_ERR err = manager.setPower(sharedUtil.getPower(), sharedUtil.getPower());
-      if(err== Reader.READER_ERR.MT_OK_ERR){
-        manager.setRegion(Reader.Region_Conf.valueOf(sharedUtil.getWorkFreq()));
-      } else {
-        Reader.READER_ERR err1 = manager.setPower(30, 30);//set uhf module power
-        if(err1== Reader.READER_ERR.MT_OK_ERR) {
-          manager.setRegion(Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1)));
+      if (manager != null) {
+        SharedUtil sharedUtil = new SharedUtil(this);
+        Reader.READER_ERR err = manager.setPower(sharedUtil.getPower(), sharedUtil.getPower());
+        if(err== Reader.READER_ERR.MT_OK_ERR){
+          manager.setRegion(Reader.Region_Conf.valueOf(sharedUtil.getWorkFreq()));
+        } else {
+          Reader.READER_ERR err1 = manager.setPower(30, 30);//set uhf module power
+          if(err1== Reader.READER_ERR.MT_OK_ERR) {
+            manager.setRegion(Reader.Region_Conf.valueOf(mSharedPreferences.getInt("freRegion", 1)));
+          }
         }
       }
+    } catch (Exception e) {
+      Sentry.captureException(e);
     }
   }
 
   @Override
   protected void onStart() {
     super.onStart();
-    initModule();
-    setScanKeyDisable();
+    try {
+      initModule();
+      setScanKeyDisable();
+    } catch (Exception e) {
+      Sentry.captureException(e);
+    }
   }
 
   @Override
@@ -142,20 +195,30 @@ public class MainActivity extends FlutterActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    if (barCodeScanUtil == null) {
-      barCodeScanUtil = new BarCodeScanUtil(this);
-      //we must set mode to 0 : BroadcastReceiver mode
-      barCodeScanUtil.setScanMode(0);
+    try {
+      if (barCodeScanUtil == null) {
+        barCodeScanUtil = new BarCodeScanUtil(this);
+        //we must set mode to 0 : BroadcastReceiver mode
+        barCodeScanUtil.setScanMode(0);
+      }
+      registerKeyCodeReceiver();
+    } catch (Exception e) {
+      Sentry.captureException(e);
     }
   }
 
   @Override
   protected void onPause() {
     super.onPause();
-    if (barCodeScanUtil != null) {
-      barCodeScanUtil.setScanMode(1);
-      barCodeScanUtil.close();
-      barCodeScanUtil = null;
+    try {
+      if (barCodeScanUtil != null) {
+        barCodeScanUtil.setScanMode(1);
+        barCodeScanUtil.close();
+        barCodeScanUtil = null;
+      }
+      unregisterReceiver(keyReceiver);
+    } catch (Exception e) {
+      Sentry.captureException(e);
     }
   }
 
@@ -169,13 +232,18 @@ public class MainActivity extends FlutterActivity {
   @Override
   protected void onStop() {
     super.onStop();
-    setScanKeyEnable();
     try {
-      Thread.sleep(500);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
+      setScanKeyEnable();
+      try {
+        Thread.sleep(500);
+      } catch (InterruptedException e) {
+        Sentry.captureException(e);
+        e.printStackTrace();
+      }
+      closeModule() ;
+    } catch (Exception e) {
+      Sentry.captureException(e);
     }
-    closeModule() ;
   }
 
   private void closeModule() {
@@ -266,7 +334,8 @@ public class MainActivity extends FlutterActivity {
       manager.asyncStopReading();
       return data;
     } catch(Exception e) {
-      return data;
+      String message = e.getMessage();
+      return message;
     }
   }
 
@@ -291,9 +360,15 @@ public class MainActivity extends FlutterActivity {
     }
   }
 
-  public void startScan() {
-    if (barCodeScanUtil != null) {
-      barCodeScanUtil.scan();
+  public String startScan() {
+    try {
+      if (barCodeScanUtil != null) {
+        barCodeScanUtil.scan();
+        return "Success";
+      }
+      return "Fail";
+    } catch(Exception e) {
+       return e.getMessage();
     }
   }
 
